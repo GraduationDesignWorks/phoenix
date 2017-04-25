@@ -89,3 +89,52 @@ Polls is a simple API allowing consumers to view polls and vote in them.
         {
             "success": true
         }
+        
+## 获取关注列表 [/follow/getFollowing]
+
+### /follow/getFollowing [GET]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+          "result": [
+            {
+                "account": "",
+                "name": "",
+                "following": true,
+                "followings": [],
+                "followers": []
+            }
+          ]
+        }
+    
+    
+## 获取粉丝列表 [/follow/getFollower]
+
+### /follow/getFollower [GET]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+          "result": [
+            {
+                "account": "",
+                "name": "",
+                "following": true,
+                "followings": [],
+                "followers": []
+            }
+          ]
+        }
