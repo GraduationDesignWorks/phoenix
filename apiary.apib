@@ -7,7 +7,7 @@ Polls is a simple API allowing consumers to view polls and vote in them.
 
 ## 注册 [/auth/register]
 
-### register [POST]
+### /auth/register [POST]
 
 + Request (application/json)
 
@@ -33,7 +33,7 @@ Polls is a simple API allowing consumers to view polls and vote in them.
 
 ## 登录 [/auth/login]
 
-### login [POST]
+### /auth/login [POST]
 
 + Request (application/json)
 
@@ -53,4 +53,39 @@ Polls is a simple API allowing consumers to view polls and vote in them.
                 },
                 "token": ""
             }
+        }
+        
+        
+## 关注 [/follow/follow]
+
+### /follow/follow [POST]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
+        }
+     
+     
+
+## 取消关注 [/follow/unfollow]
+
+### /follow/unfollow [POST]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
         }
