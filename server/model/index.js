@@ -13,7 +13,13 @@ const tokenSchema = new Schema({
   token: String,
 })
 
+const followSchema = new Schema({
+  follower: String,
+  following: String,
+})
+
 export default {
   user: mongoose.model('user', userSchema),
   token: mongoose.model('token', tokenSchema),
+  follow: mongoose.model('follow', followSchema),
 }

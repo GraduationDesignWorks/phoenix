@@ -1,0 +1,140 @@
+FORMAT: 1A
+HOST: http://localhost:4090/api/
+
+# phoenix
+
+Polls is a simple API allowing consumers to view polls and vote in them.
+
+## 注册 [/auth/register]
+
+### /auth/register [POST]
+
++ Request (application/json)
+
+        {
+            "account": "",
+            "password": "",
+            "name": "",
+            "avatar": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "user": {
+                    "account": "",
+                    "name": "",
+                    "avatar": ""
+                },
+                "token": ""
+            }
+        }
+
+## 登录 [/auth/login]
+
+### /auth/login [POST]
+
++ Request (application/json)
+
+        {
+            "account": "",
+            "password": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "user": {
+                    "account": "",
+                    "name": "",
+                    "avatar": ""
+                },
+                "token": ""
+            }
+        }
+        
+        
+## 关注 [/follow/follow]
+
+### /follow/follow [POST]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
+        }
+     
+     
+
+## 取消关注 [/follow/unfollow]
+
+### /follow/unfollow [POST]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
+        }
+        
+## 获取关注列表 [/follow/getFollowing]
+
+### /follow/getFollowing [GET]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+          "result": [
+            {
+                "account": "",
+                "name": "",
+                "following": true,
+                "followings": [],
+                "followers": []
+            }
+          ]
+        }
+    
+    
+## 获取粉丝列表 [/follow/getFollower]
+
+### /follow/getFollower [GET]
+
++ Request (application/json)
+
+        {
+            "account": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+          "result": [
+            {
+                "account": "",
+                "name": "",
+                "following": true,
+                "followings": [],
+                "followers": []
+            }
+          ]
+        }
