@@ -96,7 +96,29 @@ phoenix api
             }
         }
         
-        
+## 修改昵称 [/auth/changeName]
+
+### /auth/changeName [POST]
+
++ Request (application/json)
+
+        {
+            "name": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
+    
 ## 关注 [/follow/follow]
 
 ### /follow/follow [POST]
