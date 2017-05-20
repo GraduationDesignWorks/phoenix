@@ -1,3 +1,12 @@
+import utils from 'utility'
+import rand from 'csprng'
+import qiniu from 'qiniu'
+
+import { qiniuCfg } from '../config'
+
+qiniu.conf.ACCESS_KEY = qiniuCfg.accessKey
+qiniu.conf.SECRET_KEY = qiniuCfg.secretKey
+
 const formatedUserInfo = ({
   user,
   followings = [],
@@ -19,6 +28,22 @@ const formatedUserInfo = ({
   }
 }
 
+const avatarUploadInfo = account => {
+  const dateString = ((new Date()).getTime()).toString()
+
+  const accountPart = utils.sha1(account, 'base64')
+  const datePart = utils.sha1(dateString, 'base64')
+  const randomPart = rand(80, 36)
+
+  const key = `${randomPart}${accountPart}${datePart}`
+  const putPolicy = new qiniu.rs.PutPolicy(`${qiniuCfg.bucket}:${key}`)
+  return {
+    token: putPolicy.token(),
+    key,
+  }
+}
+
 export {
   formatedUserInfo,
+  avatarUploadInfo,
 }
