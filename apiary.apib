@@ -3,7 +3,7 @@ HOST: http://localhost:4090/api/
 
 # phoenix
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+phoenix api
 
 ## 注册 [/auth/register]
 
@@ -52,6 +52,47 @@ Polls is a simple API allowing consumers to view polls and vote in them.
                     "avatar": ""
                 },
                 "token": ""
+            }
+        }
+        
+## 获取头像上传token [/auth/getAvatarUploadInfo]
+
+### /auth/getAvatarUploadInfo [GET]
+
++ Request (application/json)
+
+        {
+            "key": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
+        
+## 修改头像 [/auth/changeAvatar]
+
+### /auth/changeAvatar [POST]
+
++ Request (application/json)
+
+        {
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "token": "",
+                "key": ""
             }
         }
         
