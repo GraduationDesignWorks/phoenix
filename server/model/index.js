@@ -18,8 +18,16 @@ const followSchema = new Schema({
   following: String,
 })
 
+const timelineSchema = new Schema({
+  account: String,
+  content: String,
+  publishDate: Date,
+  images: Array,
+})
+
 export default {
   user: mongoose.model('user', userSchema),
   token: mongoose.model('token', tokenSchema),
   follow: mongoose.model('follow', followSchema),
+  timeline: mongoose.model('timeline', timelineSchema),
 }
