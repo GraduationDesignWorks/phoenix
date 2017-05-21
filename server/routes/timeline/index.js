@@ -1,5 +1,8 @@
 import express from 'express'
-import isEmpty from 'lodash/isEmpty'
+import {
+  isEmpty,
+  isFunction,
+} from 'lodash'
 
 import { tokenValidator } from '../../lib/routerMiddlewares'
 import {
@@ -140,6 +143,204 @@ router.post('/comment', tokenValidator, (req, res) => {
     }
   })
   .catch(error => res.send({ error }))
+})
+
+const queryTimelines = ({
+  viewerAccount,
+  account,
+  accounts,
+  successHandler,
+  errorHandler
+}) => {
+  const queryAccounts = isEmpty(accounts) ? [account] : accounts
+  if (isEmpty(queryAccounts)) {
+    return errorHandler('account should not be empty')
+  }
+
+  const queries = [
+    model.user.find({ account: { $in: queryAccounts } }),
+    model.timeline.find({ account: { $in: queryAccounts } }).sort([['publishDate', 'descending']]),
+    model.comment.find({ authorAccount: { $in: queryAccounts } }),
+    model.like.find({ authorAccount: { $in: queryAccounts } }),
+  ]
+
+  Promise.all(queries)
+  .then(queryItems => {
+    const [ users, timelines, comments, likes ] = queryItems
+
+    // comment
+    const commentMap = {}
+    comments.map(comment => {
+      const { timelineID } = comment
+      const commentArray = commentMap[timelineID] || []
+      commentArray.push(comment)
+      commentMap[timelineID] = commentArray
+    })
+
+    // like
+    const likeMap = {}
+    likes.map(like => {
+      const { timelineID } = like
+      const likeArray = likeMap[timelineID] || []
+      likeArray.push(like)
+      likeMap[timelineID] = likeArray
+    })
+
+    const result = timelines.map(raw => {
+      const timeline = raw.toJSON()
+      const userAccount = timeline.account
+      const [user] = users.filter(user => user.account === userAccount)
+      timeline.user = formatedUserInfo({ user })
+
+      timeline.comments = commentMap[timeline._id] || []
+
+      const likes = likeMap[timeline._id] || []
+      timeline.likes = likes
+      timeline.liked = likes.map(like => like.account).includes(viewerAccount)
+      return timeline
+    })
+    if (isFunction(successHandler)) {
+      successHandler(result)
+    }
+  })
+  .catch(error => {
+    if (isFunction(errorHandler)) {
+      errorHandler(error)
+    }
+  })
+}
+
+/**
+ * 根据用户关注的人获取timeline
+ */
+router.get('/getFollowingTimelines', tokenValidator, (req, res) => {
+  const { account: viewerAccount } = req.params
+
+  model.follow.find({ follower: viewerAccount })
+  .then(followingResult => {
+    const accounts = followingResult.map(result => result.following)
+    accounts.push(viewerAccount)
+    queryTimelines({
+      viewerAccount,
+      accounts,
+      successHandler: result => res.send({ result }),
+      errorHandler: error => res.send({ error })
+    })
+  })
+  .catch(error => {
+    if (isFunction(errorHandler)) {
+      errorHandler(error)
+    }
+  })
+
+})
+
+/**
+ * 根据用户获取timeline
+ */
+router.get('/getByUser', tokenValidator, (req, res) => {
+  const { account: viewerAccount } = req.params
+  const { account } = req.query
+
+  queryTimelines({
+    viewerAccount,
+    account,
+    successHandler: result => res.send({ result }),
+    errorHandler: error => res.send({ error })
+  })
+})
+
+router.get('/getTimelines', tokenValidator, (req, res) => {
+  const { lastTimelineID } = req.query
+  const { account: viewerAccount } = req.params
+  const { amount = 30 } = req.query
+
+  model.timeline.find().sort([['publishDate', 'descending']])
+  .then(timelines => {
+    const result = []
+    if (isEmpty(lastTimelineID)) {
+      for(let i = 0; i < timelines.length; i++) {
+        const timeline = timelines[i]
+        if (result.length === amount) {
+          break
+        }
+        if (result.length < amount) {
+          result.push(timeline)
+        }
+      }
+    } else {
+      let found = false
+      for(let i = 0; i < timelines.length; i++) {
+        const timeline = timelines[i]
+        if (result.length === amount) {
+          break
+        }
+        if (found && result.length < amount) {
+          result.push(timeline)
+        }
+        if (timeline._id.toString() === lastTimelineID) {
+          found = true
+        }
+      }
+    }
+
+    const queryAccounts = []
+    result.forEach(function(element) {
+      queryAccounts.push(element.account)
+    }, this)
+
+    const queries = [
+      model.user.find({ account: { $in: queryAccounts } }),
+      model.comment.find({ authorAccount: { $in: queryAccounts } }),
+      model.like.find({ authorAccount: { $in: queryAccounts } }),
+    ]
+
+    Promise.all(queries)
+    .then(queryItems => {
+      const [ users, comments, likes ] = queryItems
+      // comment
+      const commentMap = {}
+      comments.map(comment => {
+        const { timelineID } = comment
+        const commentArray = commentMap[timelineID] || []
+        commentArray.push(comment)
+        commentMap[timelineID] = commentArray
+      })
+
+      // like
+      const likeMap = {}
+      likes.map(like => {
+        const { timelineID } = like
+        const likeArray = likeMap[timelineID] || []
+        likeArray.push(like)
+        likeMap[timelineID] = likeArray
+      })
+
+      res.send({
+        result: result.map(raw => {
+          const timeline = raw.toJSON()
+          const userAccount = timeline.account
+          const [user] = users.filter(user => user.account === userAccount)
+          timeline.user = formatedUserInfo({ user })
+
+          timeline.comments = commentMap[timeline._id] || []
+
+          const likes = likeMap[timeline._id] || []
+          timeline.likes = likes
+          timeline.liked = likes.map(like => like.account).includes(viewerAccount)
+          return timeline
+        })
+      })
+    })
+    .catch(error => {
+      console.warn(error)
+      res.send({ error })
+    })
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
 })
 
 export default router
