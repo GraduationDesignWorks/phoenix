@@ -118,6 +118,29 @@ phoenix api
                 "followers": []
             }
         }
+        
+## 修改箴言 [/auth/changeMotto]
+
+### /auth/changeMotto [POST]
+
++ Request (application/json)
+
+        {
+            "motto": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
     
 ## 关注 [/follow/follow]
 
@@ -200,4 +223,59 @@ phoenix api
                 "followers": []
             }
           ]
+        }
+        
+
+## 获取图片上传info [/timeline/getImageUploadInfo]
+
+### /timeline/getImageUploadInfo [GET]
+
++ Request (application/json)
+
+        {
+            "amount": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": [
+                {
+                    "token": "",
+                    "key": ""
+                }
+            ]
+        }
+        
+## 发布状态 [/timeline/postTimeline]
+
+### /timeline/postTimeline [POST]
+
++ Request (application/json)
+
+        {
+            "content": "",
+            "images": []
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
+        }
+        
+## 删除状态 [/timeline/deleteTimeline]
+
+### /timeline/deleteTimeline [POST]
+
++ Request (application/json)
+
+        {
+            "timelineID": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
         }
