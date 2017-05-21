@@ -2,9 +2,17 @@ import express from 'express'
 import isEmpty from 'lodash/isEmpty'
 import rongcloudSDK from 'rongcloud-sdk'
 
-import { rcCfg } from '../../config'
+import {
+  avatarUploadInfo,
+  formatedUserInfo,
+} from '../../lib/util'
+import {
+  rcCfg,
+  qiniuCfg,
+} from '../../config'
 import db from '../../lib/db'
 import model from '../../model'
+import { tokenValidator } from '../../lib/routerMiddlewares'
 
 rongcloudSDK.init(rcCfg.appKey, rcCfg.appSecret)
 const router = express.Router()
@@ -139,6 +147,58 @@ router.post('/register', (req, res) => {
       res.send({ error: '该账号已被注册' })
     }
   })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
+router.get('/getAvatarUploadInfo', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const result = avatarUploadInfo(account)
+  res.send({ result })
+})
+
+router.post('/changeAvatar', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { key } = req.body
+  if (isEmpty(key)) {
+    return res.send({ error: 'key not valid' })
+  }
+
+  let avatar = `${qiniuCfg.host}/${key}`
+  if (!qiniuCfg.host.startsWith('http://') && !qiniuCfg.host.startsWith('https://')) {
+    avatar = `http://${avatar}`
+  }
+  model.user.findOneAndUpdate({ account }, { avatar })
+  .then(user => res.send({ result: formatedUserInfo({ user }) }))
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
+router.post('/changeName', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { name } = req.body
+  const newName = name && name.trim()
+  if (isEmpty(newName)) {
+    return res.send({ error: '姓名不可为空' })
+  }
+  model.user.findOneAndUpdate({ account }, { name: newName })
+  .then(user => res.send({ result: formatedUserInfo({ user }) }))
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
+router.post('/changeMotto', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { motto } = req.body
+
+  model.user.findOneAndUpdate({ account }, { motto })
+  .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)
     res.send({ error })

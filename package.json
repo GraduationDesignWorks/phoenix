@@ -11,13 +11,16 @@
   "dependencies": {
     "body-parser": "^1.17.1",
     "cookie-parser": "^1.4.3",
+    "csprng": "^0.1.2",
     "express": "^4.15.2",
     "express-session": "^1.15.2",
     "lodash": "^4.17.4",
     "method-override": "^2.3.8",
     "mongoose": "^4.9.6",
     "morgan": "^1.8.1",
-    "rongcloud-sdk": "^1.0.3"
+    "qiniu": "^6.1.13",
+    "rongcloud-sdk": "^1.0.3",
+    "utility": "^1.12.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

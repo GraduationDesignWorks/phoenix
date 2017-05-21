@@ -3,7 +3,7 @@ HOST: http://localhost:4090/api/
 
 # phoenix
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+phoenix api
 
 ## 注册 [/auth/register]
 
@@ -55,7 +55,93 @@ Polls is a simple API allowing consumers to view polls and vote in them.
             }
         }
         
+## 获取头像上传token [/auth/getAvatarUploadInfo]
+
+### /auth/getAvatarUploadInfo [GET]
+
++ Request (application/json)
+
+        {
+            "key": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
         
+## 修改头像 [/auth/changeAvatar]
+
+### /auth/changeAvatar [POST]
+
++ Request (application/json)
+
+        {
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "token": "",
+                "key": ""
+            }
+        }
+        
+## 修改昵称 [/auth/changeName]
+
+### /auth/changeName [POST]
+
++ Request (application/json)
+
+        {
+            "name": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
+        
+## 修改箴言 [/auth/changeMotto]
+
+### /auth/changeMotto [POST]
+
++ Request (application/json)
+
+        {
+            "motto": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": {
+                "account": "",
+                "name": "",
+                "avatar": "",
+                "following": false,
+                "followings": [],
+                "followers": []
+            }
+        }
+    
 ## 关注 [/follow/follow]
 
 ### /follow/follow [POST]
@@ -137,4 +223,59 @@ Polls is a simple API allowing consumers to view polls and vote in them.
                 "followers": []
             }
           ]
+        }
+        
+
+## 获取图片上传info [/timeline/getImageUploadInfo]
+
+### /timeline/getImageUploadInfo [GET]
+
++ Request (application/json)
+
+        {
+            "amount": ""
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result": [
+                {
+                    "token": "",
+                    "key": ""
+                }
+            ]
+        }
+        
+## 发布状态 [/timeline/postTimeline]
+
+### /timeline/postTimeline [POST]
+
++ Request (application/json)
+
+        {
+            "content": "",
+            "images": []
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
+        }
+        
+## 删除状态 [/timeline/deleteTimeline]
+
+### /timeline/deleteTimeline [POST]
+
++ Request (application/json)
+
+        {
+            "timelineID": ""
+        }
+        
++ Response 200 (application/json)
+
+        {
+            "success": true
         }

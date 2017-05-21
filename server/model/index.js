@@ -18,8 +18,38 @@ const followSchema = new Schema({
   following: String,
 })
 
+const timelineSchema = new Schema({
+  account: String,
+  content: String,
+  publishDate: Date,
+  images: Array,
+})
+
+// 用户点赞的表
+const likeSchema = new Schema({
+  authorAccount: String,
+  account: String,
+  avatar: String,
+  name: String,
+  timelineID: String,
+  publishDate: Date,
+})
+
+// 评论表
+const commentSchema = new Schema({
+  authorAccount: String,
+  account: String,
+  name: String,
+  timelineID: String,
+  content: String,
+  publishDate: Date,
+})
+
 export default {
   user: mongoose.model('user', userSchema),
   token: mongoose.model('token', tokenSchema),
   follow: mongoose.model('follow', followSchema),
+  timeline: mongoose.model('timeline', timelineSchema),
+  like: mongoose.model('like', likeSchema),
+  comment: mongoose.model('comment', commentSchema),
 }
