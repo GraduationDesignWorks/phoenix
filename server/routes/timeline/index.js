@@ -104,4 +104,42 @@ router.post('/like', tokenValidator, (req, res) => {
   .catch(error => res.send({ error }))
 })
 
+// 评论某个timeline
+router.post('/comment', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const {
+    timelineID,
+    content,
+  } = req.body
+
+  if (isEmpty(content)) {
+    return res.send({ error: '评论不可为空' })
+  }
+
+  const queries = [
+    model.timeline.findById(timelineID),
+    model.user.findOne({ account }),
+  ]
+  Promise.all(queries)
+  .then(queryItems => {
+    const [ timeline, user, replyUser = {} ] = queryItems
+    if (isEmpty(timeline)) {
+      res.send({ error: '未找到timeline' })
+    } else {
+      const comment = new model.comment({
+        authorAccount: timeline.account,
+        account,
+        name: user.name,
+        timelineID,
+        content,
+        publishDate: new Date(),
+      })
+      comment.save()
+      .then(() => res.send({ success: true }))
+      .catch(error => res.send({ error }))
+    }
+  })
+  .catch(error => res.send({ error }))
+})
+
 export default router
