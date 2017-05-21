@@ -2,6 +2,7 @@ import express from 'express'
 import isEmpty from 'lodash/isEmpty'
 
 import db from '../../lib/db'
+import model from '../../model'
 
 const router = express.Router()
 

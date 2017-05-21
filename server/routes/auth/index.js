@@ -193,4 +193,16 @@ router.post('/changeName', tokenValidator, (req, res) => {
   })
 })
 
+router.post('/changeMotto', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { motto } = req.body
+
+  model.user.findOneAndUpdate({ account }, { motto })
+  .then(user => res.send({ result: formatedUserInfo({ user }) }))
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
 export default router
