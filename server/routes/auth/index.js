@@ -170,7 +170,7 @@ router.post('/changeAvatar', tokenValidator, (req, res) => {
   if (!qiniuCfg.host.startsWith('http://') && !qiniuCfg.host.startsWith('https://')) {
     avatar = `http://${avatar}`
   }
-  model.user.findOneAndUpdate({ account }, { avatar })
+  model.user.findOneAndUpdate({ account }, { avatar }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)
@@ -185,7 +185,7 @@ router.post('/changeName', tokenValidator, (req, res) => {
   if (isEmpty(newName)) {
     return res.send({ error: '姓名不可为空' })
   }
-  model.user.findOneAndUpdate({ account }, { name: newName })
+  model.user.findOneAndUpdate({ account }, { name: newName }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)
@@ -197,7 +197,7 @@ router.post('/changeMotto', tokenValidator, (req, res) => {
   const { account } = req.params
   const { motto } = req.body
 
-  model.user.findOneAndUpdate({ account }, { motto })
+  model.user.findOneAndUpdate({ account }, { motto }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)

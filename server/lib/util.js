@@ -17,11 +17,13 @@ const formatedUserInfo = ({
     account,
     name,
     avatar,
+    motto,
   } = user
   return {
     account,
     name,
     avatar,
+    motto,
     following,
     followings,
     followers,
