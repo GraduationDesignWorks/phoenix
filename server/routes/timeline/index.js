@@ -29,8 +29,16 @@ router.post('/postTimeline', tokenValidator, (req, res) => {
   const { account } = req.params
   const {
     content = '',
-    images = [],
+    imagesJSONString = "",
   } = req.body
+  let { images } = req.body
+  if (isEmpty(images)) {
+    if (isEmpty(imagesJSONString)) {
+      images = []
+    } else {
+      images = JSON.parse(imagesJSONString)
+    }
+  }
 
   const timeline = new model.timeline({
     account,
