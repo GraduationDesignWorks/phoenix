@@ -258,6 +258,62 @@ router.get('/getByUser', tokenValidator, (req, res) => {
   })
 })
 
+router.get('/getTimeline', tokenValidator, (req, res) => {
+  const { timelineID } = req.query
+  model.timeline.findOne({ _id: timelineID })
+  .then(timeline => {
+    const { account } = timeline
+    const queries = [
+      model.user.findOne({ account: account }),
+      model.comment.find({ timelineID }),
+      model.like.find({ timelineID }),
+    ]
+
+    Promise.all(queries)
+    .then(queryItems => {
+      const [ user, comments, likes ] = queryItems
+
+      const commentAccounts = comments.map(comment => comment.account)
+      const likeAccounts = likes.map(like => like.account)
+      const accounts = Array.from(new Set(commentAccounts.concat(likeAccounts)))
+
+      model.user.find({ account: { $in: accounts } })
+      .then(users => {
+        const userMap = {}
+        users.map(u => userMap[u.account] = formatedUserInfo({ user: u }))
+
+        const result = timeline.toJSON()
+        const userAccount = result.account
+        result.user = formatedUserInfo({ user })
+        result.comments = comments.map(obj => {
+          const comment = obj.toJSON()
+          comment.user = userMap[comment.account]
+          return comment
+        })
+        result.likes = likes.map(obj => {
+          const like = obj.toJSON()
+          like.user = userMap[like.account]
+          return like
+        })
+
+        res.send({ result })
+      })
+      .catch(error => {
+        console.warn(error)
+        res.send({ error })
+      })
+    })
+    .catch(error => {
+      console.warn(error)
+      res.send({ error })
+    })
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
 router.get('/getTimelines', tokenValidator, (req, res) => {
   const { lastTimelineID } = req.query
   const { account: viewerAccount } = req.params
