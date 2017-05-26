@@ -264,4 +264,29 @@ router.post('/changeMotto', tokenValidator, (req, res) => {
   })
 })
 
+router.get('/getUserByAccount', tokenValidator, (req, res) => {
+  const { account } = req.query
+  const { account: callerAccount } = req.params
+
+  const queries = [
+    model.user.findOne({ account }),
+    model.follow.findOne({ follower: callerAccount, following: account })
+  ]
+
+  Promise.all(queries)
+  .then(queryItems => {
+    const [ user, follow ] = queryItems
+    res.send({
+      result: {
+        user,
+        follow,
+      }
+    })
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
 export default router

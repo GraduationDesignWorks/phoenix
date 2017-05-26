@@ -258,7 +258,7 @@ router.get('/getByUser', tokenValidator, (req, res) => {
   })
 })
 
-router.get('/getTimeline', tokenValidator, (req, res) => {
+router.get('/getTimelineById', tokenValidator, (req, res) => {
   const { timelineID } = req.query
   model.timeline.findOne({ _id: timelineID })
   .then(timeline => {
