@@ -17,7 +17,70 @@ import { tokenValidator } from '../../lib/routerMiddlewares'
 rongcloudSDK.init(rcCfg.appKey, rcCfg.appSecret)
 const router = express.Router()
 
+// login
 router.post('/login', (req, res) => {
+  const {
+    account,
+    password
+  } = req.body
+
+  const queries = [
+    model.user.findOne({ account, password }),
+    model.follow.find({ follower: account }), //关注数
+    model.follow.find({ following: account }), //粉丝数
+  ]
+
+  Promise.all(queries)
+  .then(queryItems => {
+    const [ user, followings, followers ] = queryItems
+    if (isEmpty(user)) {
+      res.send({ error: `${account} 不存在` })
+    } else {
+      const { name } = user
+      rongcloudSDK.user.getToken(
+        account,
+        name,
+        'http://www.rongcloud.cn/docs/assets/img/logo_s@2x.png',
+        (error, resultText) => {
+          if (isEmpty(error)) {
+            const result = JSON.parse(resultText)
+            const {
+              code,
+              token,
+            } = result
+            if (code === 200) {
+                model.token.findOneAndUpdate({ account }, { token }, { upsert: true })
+                .then(doc => {
+                  res.send({
+                    result: {
+                      user: formatedUserInfo({ user, followings, followers }),
+                      token,
+                    }
+                  })
+                })
+                .catch(error => {
+                  console.warn(error)
+                  res.send({ error })
+                })
+            } else {
+                console.warn(`status code ${code}`)
+                res.send({ error: `status code ${code}` })
+            }
+          } else {
+            console.warn(error)
+            res.send({ error })
+          }
+        }
+      )
+    }
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
+router.post('/oldlogin', (req, res) => {
   const {
     account,
     password,
@@ -28,16 +91,12 @@ router.post('/login', (req, res) => {
   }
 
   model.user.findOne({ account, password })
-  .then(result => {
-    if (isEmpty(result)) {
+  .then(rawUser => {
+    if (isEmpty(rawUser)) {
       res.send({ error: '账号或密码错误' })
     } else {
-      const { name, avatar } = result
-      const user = {
-        account,
-        name,
-        avatar,
-      }
+      const { name, avatar } = rawUser
+
       rongcloudSDK.user.getToken(
         account,
         name,
@@ -53,7 +112,7 @@ router.post('/login', (req, res) => {
                 model.token.findOneAndUpdate({ account }, { token }, { upsert: true })
                 .then( _ => res.send({
                   result: {
-                    user,
+                    user: formatedUserInfo({ user: rawUser }),
                     token,
                   }
                 }))
@@ -170,7 +229,7 @@ router.post('/changeAvatar', tokenValidator, (req, res) => {
   if (!qiniuCfg.host.startsWith('http://') && !qiniuCfg.host.startsWith('https://')) {
     avatar = `http://${avatar}`
   }
-  model.user.findOneAndUpdate({ account }, { avatar })
+  model.user.findOneAndUpdate({ account }, { avatar }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)
@@ -185,7 +244,7 @@ router.post('/changeName', tokenValidator, (req, res) => {
   if (isEmpty(newName)) {
     return res.send({ error: '姓名不可为空' })
   }
-  model.user.findOneAndUpdate({ account }, { name: newName })
+  model.user.findOneAndUpdate({ account }, { name: newName }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
   .catch(error => {
     console.warn(error)
@@ -197,8 +256,33 @@ router.post('/changeMotto', tokenValidator, (req, res) => {
   const { account } = req.params
   const { motto } = req.body
 
-  model.user.findOneAndUpdate({ account }, { motto })
+  model.user.findOneAndUpdate({ account }, { motto }, { new: true })
   .then(user => res.send({ result: formatedUserInfo({ user }) }))
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
+router.get('/getUserByAccount', tokenValidator, (req, res) => {
+  const { account } = req.query
+  const { account: callerAccount } = req.params
+
+  const queries = [
+    model.user.findOne({ account }),
+    model.follow.findOne({ follower: callerAccount, following: account })
+  ]
+
+  Promise.all(queries)
+  .then(queryItems => {
+    const [ user, follow ] = queryItems
+    res.send({
+      result: {
+        user,
+        follow,
+      }
+    })
+  })
   .catch(error => {
     console.warn(error)
     res.send({ error })
