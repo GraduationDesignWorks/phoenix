@@ -115,6 +115,29 @@ router.post('/like', tokenValidator, (req, res) => {
   .catch(error => res.send({ error }))
 })
 
+router.post('/deleteComment', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { comment_id } = req.body
+
+  model.comment.find({ _id: comment_id, account })
+  .then(result => {
+    if (isEmpty(result)) {
+      res.send({ error: 'shit' })
+    } else {
+      model.comment.findByIdAndRemove(comment_id)
+      .then(_ => res.send({ success: true }))
+      .catch(error => {
+        console.warn(error)
+        res.send({ error })
+      })
+    }
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
+})
+
 // 评论某个timeline
 router.post('/comment', tokenValidator, (req, res) => {
   const { account } = req.params
@@ -315,7 +338,10 @@ router.get('/getTimelineById', tokenValidator, (req, res) => {
 })
 
 router.get('/getTimelines', tokenValidator, (req, res) => {
-  const { lastTimelineID } = req.query
+  const {
+    lastTimelineID,
+    since_id,
+  } = req.query
   const { account: viewerAccount } = req.params
   const { amount = 30 } = req.query
 
@@ -323,13 +349,29 @@ router.get('/getTimelines', tokenValidator, (req, res) => {
   .then(timelines => {
     const result = []
     if (isEmpty(lastTimelineID)) {
-      for(let i = 0; i < timelines.length; i++) {
-        const timeline = timelines[i]
-        if (result.length === amount) {
-          break
+      if (isEmpty(since_id)) {
+        for(let i = 0; i < timelines.length; i++) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (result.length < amount) {
+            result.push(timeline)
+          }
         }
-        if (result.length < amount) {
-          result.push(timeline)
+      } else {
+        let found = false
+        for(let i = timelines.length - 1; i >= 0; i--) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (found && result.length < amount) {
+            result.push(timeline)
+          }
+          if (timeline._id.toString() === since_id) {
+            found = true
+          }
         }
       }
     } else {
