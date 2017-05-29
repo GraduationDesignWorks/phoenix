@@ -22,7 +22,7 @@ const followSchema = new Schema({
 const timelineSchema = new Schema({
   account: String,
   content: String,
-  publishDate: Date,
+  publishDate: Number,
   images: Array,
 })
 
@@ -33,7 +33,7 @@ const likeSchema = new Schema({
   avatar: String,
   name: String,
   timelineID: String,
-  publishDate: Date,
+  publishDate: Number,
 })
 
 // 评论表
@@ -43,7 +43,7 @@ const commentSchema = new Schema({
   name: String,
   timelineID: String,
   content: String,
-  publishDate: Date,
+  publishDate: Number,
 })
 
 export default {

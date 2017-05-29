@@ -43,7 +43,7 @@ router.post('/postTimeline', tokenValidator, (req, res) => {
   const timeline = new model.timeline({
     account,
     content,
-    publishDate: new Date(),
+    publishDate: (new Date()).getTime(),
     images,
   })
 
@@ -104,7 +104,7 @@ router.post('/like', tokenValidator, (req, res) => {
           avatar: user.avatar,
           name: user.name,
           timelineID,
-          publishDate: new Date()
+          publishDate: (new Date()).getTime()
         })
         like.save()
         .then(() => res.send({ success: true }))
@@ -166,7 +166,7 @@ router.post('/comment', tokenValidator, (req, res) => {
         name: user.name,
         timelineID,
         content,
-        publishDate: new Date(),
+        publishDate: (new Date()).getTime(),
       })
       comment.save()
       .then(() => res.send({ success: true }))
