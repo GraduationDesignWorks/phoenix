@@ -43,7 +43,7 @@ router.post('/postTimeline', tokenValidator, (req, res) => {
   const timeline = new model.timeline({
     account,
     content,
-    publishDate: new Date(),
+    publishDate: (new Date()).getTime(),
     images,
   })
 
@@ -104,7 +104,7 @@ router.post('/like', tokenValidator, (req, res) => {
           avatar: user.avatar,
           name: user.name,
           timelineID,
-          publishDate: new Date()
+          publishDate: (new Date()).getTime()
         })
         like.save()
         .then(() => res.send({ success: true }))
@@ -113,6 +113,29 @@ router.post('/like', tokenValidator, (req, res) => {
     }
   })
   .catch(error => res.send({ error }))
+})
+
+router.post('/deleteComment', tokenValidator, (req, res) => {
+  const { account } = req.params
+  const { comment_id } = req.body
+
+  model.comment.find({ _id: comment_id, account })
+  .then(result => {
+    if (isEmpty(result)) {
+      res.send({ error: 'shit' })
+    } else {
+      model.comment.findByIdAndRemove(comment_id)
+      .then(_ => res.send({ success: true }))
+      .catch(error => {
+        console.warn(error)
+        res.send({ error })
+      })
+    }
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
+  })
 })
 
 // 评论某个timeline
@@ -143,7 +166,7 @@ router.post('/comment', tokenValidator, (req, res) => {
         name: user.name,
         timelineID,
         content,
-        publishDate: new Date(),
+        publishDate: (new Date()).getTime(),
       })
       comment.save()
       .then(() => res.send({ success: true }))
@@ -247,14 +270,115 @@ router.get('/getFollowingTimelines', tokenValidator, (req, res) => {
  * 根据用户获取timeline
  */
 router.get('/getByUser', tokenValidator, (req, res) => {
-  const { account: viewerAccount } = req.params
-  const { account } = req.query
-
-  queryTimelines({
-    viewerAccount,
+  const {
+    lastTimelineID,
+    since_id,
     account,
-    successHandler: result => res.send({ result }),
-    errorHandler: error => res.send({ error })
+  } = req.query
+  const { account: viewerAccount } = req.params
+  const { amount = 30 } = req.query
+
+  model.timeline.find({ account: account }).sort([['publishDate', 'descending']])
+  .then(timelines => {
+    const result = []
+    if (isEmpty(lastTimelineID)) {
+      if (isEmpty(since_id)) {
+        for(let i = 0; i < timelines.length; i++) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (result.length < amount) {
+            result.push(timeline)
+          }
+        }
+      } else {
+        let found = false
+        for(let i = timelines.length - 1; i >= 0; i--) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (found && result.length < amount) {
+            result.push(timeline)
+          }
+          if (timeline._id.toString() === since_id) {
+            found = true
+          }
+        }
+      }
+    } else {
+      let found = false
+      for(let i = 0; i < timelines.length; i++) {
+        const timeline = timelines[i]
+        if (result.length === amount) {
+          break
+        }
+        if (found && result.length < amount) {
+          result.push(timeline)
+        }
+        if (timeline._id.toString() === lastTimelineID) {
+          found = true
+        }
+      }
+    }
+
+    const queryAccounts = []
+    result.forEach(function(element) {
+      queryAccounts.push(element.account)
+    }, this)
+
+    const queries = [
+      model.user.find({ account: { $in: queryAccounts } }),
+      model.comment.find({ authorAccount: { $in: queryAccounts } }),
+      model.like.find({ authorAccount: { $in: queryAccounts } }),
+    ]
+
+    Promise.all(queries)
+    .then(queryItems => {
+      const [ users, comments, likes ] = queryItems
+      // comment
+      const commentMap = {}
+      comments.map(comment => {
+        const { timelineID } = comment
+        const commentArray = commentMap[timelineID] || []
+        commentArray.push(comment)
+        commentMap[timelineID] = commentArray
+      })
+
+      // like
+      const likeMap = {}
+      likes.map(like => {
+        const { timelineID } = like
+        const likeArray = likeMap[timelineID] || []
+        likeArray.push(like)
+        likeMap[timelineID] = likeArray
+      })
+
+      res.send({
+        result: result.map(raw => {
+          const timeline = raw.toJSON()
+          const userAccount = timeline.account
+          const [user] = users.filter(user => user.account === userAccount)
+          timeline.user = formatedUserInfo({ user })
+
+          timeline.comments = commentMap[timeline._id] || []
+
+          const likes = likeMap[timeline._id] || []
+          timeline.likes = likes
+          timeline.liked = likes.map(like => like.account).includes(viewerAccount)
+          return timeline
+        })
+      })
+    })
+    .catch(error => {
+      console.warn(error)
+      res.send({ error })
+    })
+  })
+  .catch(error => {
+    console.warn(error)
+    res.send({ error })
   })
 })
 
@@ -315,7 +439,10 @@ router.get('/getTimelineById', tokenValidator, (req, res) => {
 })
 
 router.get('/getTimelines', tokenValidator, (req, res) => {
-  const { lastTimelineID } = req.query
+  const {
+    lastTimelineID,
+    since_id,
+  } = req.query
   const { account: viewerAccount } = req.params
   const { amount = 30 } = req.query
 
@@ -323,13 +450,29 @@ router.get('/getTimelines', tokenValidator, (req, res) => {
   .then(timelines => {
     const result = []
     if (isEmpty(lastTimelineID)) {
-      for(let i = 0; i < timelines.length; i++) {
-        const timeline = timelines[i]
-        if (result.length === amount) {
-          break
+      if (isEmpty(since_id)) {
+        for(let i = 0; i < timelines.length; i++) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (result.length < amount) {
+            result.push(timeline)
+          }
         }
-        if (result.length < amount) {
-          result.push(timeline)
+      } else {
+        let found = false
+        for(let i = timelines.length - 1; i >= 0; i--) {
+          const timeline = timelines[i]
+          if (result.length === amount) {
+            break
+          }
+          if (found && result.length < amount) {
+            result.push(timeline)
+          }
+          if (timeline._id.toString() === since_id) {
+            found = true
+          }
         }
       }
     } else {
